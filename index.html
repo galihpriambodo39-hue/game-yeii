@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Bahasa Yei: Seret & Lepas Anggota Tubuh</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #0056b3;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .game-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        /* Kotak untuk gambar yang bisa diseret */
+        .images-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-width: 150px;
+            min-height: 400px;
+        }
+        .drag-item {
+            background-color: #e9ecef;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 30px; /* Ukuran emoji/gambar */
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .drag-item:active {
+            cursor: grabbing;
+        }
+        .drag-item span.label {
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        /* Zona tempat melepas (drop) */
+        .drop-zones-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-grow: 1;
+        }
+        .drop-box {
+            background-color: #f8f9fa;
+            border: 2px dashed #adb5bd;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100px;
+            transition: background-color 0.3s;
+        }
+        .drop-box.drag-over {
+            background-color: #e2e6ea;
+            border-color: #0056b3;
+        }
+        .yei-word {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        .drop-area {
+            width: 100%;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            color: white;
+        }
+        #checkBtn { background-color: #28a745; }
+        #checkBtn:hover { background-color: #218838; }
+        #solutionBtn { background-color: #17a2b8; }
+        #solutionBtn:hover { background-color: #138496; }
+        
+        /* Indikator Benar/Salah */
+        .correct { border: 2px solid #28a745; background-color: #d4edda; }
+        .incorrect { border: 2px solid #dc3545; background-color: #f8d7da; }
+        
+        #feedback {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kuis Seret & Lepas: Anggota Tubuh</h1>
+    <p class="subtitle">Seret gambar di sebelah kiri dan masukkan ke dalam kotak Bahasa Yei yang benar!</p>
+
+    <div class="game-container">
+        <div class="images-container" id="source-container">
+            <div class="drag-item" draggable="true" data-id="kepala" id="item-kepala">👤 <span class="label">Kepala</span></div>
+            <div class="drag-item" draggable="true" data-id="mata" id="item-mata">👁️ <span class="label">Mata</span></div>
+            <div class="drag-item" draggable="true" data-id="hidung" id="item-hidung">👃 <span class="label">Hidung</span></div>
+            <div class="drag-item" draggable="true" data-id="telinga" id="item-telinga">👂 <span class="label">Telinga</span></div>
+            <div class="drag-item" draggable="true" data-id="mulut" id="item-mulut">👄 <span class="label">Mulut</span></div>
+            <div class="drag-item" draggable="true" data-id="tangan" id="item-tangan">🖐️ <span class="label">Tangan</span></div>
+            <div class="drag-item" draggable="true" data-id="perut" id="item-perut">🤰 <span class="label">Perut</span></div>
+            <div class="drag-item" draggable="true" data-id="kaki" id="item-kaki">🦶 <span class="label">Kaki</span></div>
+        </div>
+
+        <div class="drop-zones-container" id="drop-zones">
+            </div>
+    </div>
+
+    <div class="buttons">
+        <button id="checkBtn" onclick="checkAnswers()">Cek Jawaban</button>
+        <button id="solutionBtn" onclick="showSolutions()">Lihat Solusi</button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <script>
+        // Data Kosakata Bahasa Yei
+        const vocabulary = [
+            { id: "kepala", yei: "Keipil" },
+            { id: "mata", yei: "Cur Peyab Peyab" },
+            { id: "hidung", yei: "Gambal" },
+            { id: "telinga", yei: "Derko" },
+            { id: "mulut", yei: "Bejar" },
+            { id: "tangan", yei: "Tir" },
+            { id: "perut", yei: "Buri" },
+            { id: "kaki", yei: "Cherra" }
+        ];
+
+        // Acak urutan kotak target agar posisinya berbeda-beda
+        const shuffledVocab = [...vocabulary].sort(() => Math.random() - 0.5);
+        const dropZonesContainer = document.getElementById('drop-zones');
+
+        // Render Kotak Drop Zone
+        shuffledVocab.forEach(item => {
+            const box = document.createElement('div');
+            box.className = 'drop-box';
+            box.dataset.match = item.id;
+
+            const label = document.createElement('div');
+            label.className = 'yei-word';
+            label.textContent = item.yei;
+
+            const dropArea = document.createElement('div');
+            dropArea.className = 'drop-area';
+
+            box.appendChild(label);
+            box.appendChild(dropArea);
+            dropZonesContainer.appendChild(box);
+        });
+
+        // Logika Drag and Drop
+        const draggables = document.querySelectorAll('.drag-item');
+        const dropAreas = document.querySelectorAll('.drop-area');
+        const sourceContainer = document.getElementById('source-container');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+            });
+        });
+
+        // Tambahkan event listener ke semua dropArea dan sourceContainer (agar bisa dikembalikan)
+        const allDropTargets = [...dropAreas, sourceContainer];
+
+        allDropTargets.forEach(target => {
+            target.addEventListener('dragover', e => {
+                e.preventDefault(); // Mengizinkan drop
+                if (target.classList.contains('drop-area')) {
+                    target.parentElement.classList.add('drag-over');
+                }
+            });
+
+            target.addEventListener('dragleave', e => {
+                if (target.classList.contains('drop-area')) {
+                    target.parentElement.classList.remove('drag-over');
+                }
+            });
+
+            target.addEventListener('drop', e => {
+                e.preventDefault();
+                if (target.classList.contains('drop-area')) {
+                    target.parentElement.classList.remove('drag-over');
+                }
+                const draggable = document.querySelector('.dragging');
+                
+                // Pastikan hanya ada 1 gambar di dalam drop area
+                if (target.classList.contains('drop-area') && target.children.length > 0) {
+                    // Jika sudah ada isinya, kembalikan isi sebelumnya ke tempat awal
+                    sourceContainer.appendChild(target.children[0]);
+                }
+                target.appendChild(draggable);
+            });
+        });
+
+        // Fungsi Cek Jawaban
+        function checkAnswers() {
+            let score = 0;
+            const dropBoxes = document.querySelectorAll('.drop-box');
+
+            dropBoxes.forEach(box => {
+                const matchId = box.dataset.match;
+                const dropArea = box.querySelector('.drop-area');
+                const item = dropArea.querySelector('.drag-item');
+
+                // Bersihkan styling sebelumnya
+                box.classList.remove('correct', 'incorrect');
+
+                if (item) {
+                    if (item.dataset.id === matchId) {
+                        box.classList.add('correct');
+                        score++;
+                    } else {
+                        box.classList.add('incorrect');
+                    }
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            if (score === vocabulary.length) {
+                feedback.style.color = "#28a745";
+                feedback.textContent = `Luar Biasa! Semua Jawaban Benar! Skor: ${score}/${vocabulary.length}`;
+            } else {
+                feedback.style.color = "#dc3545";
+                feedback.textContent = `Skor Anda: ${score}/${vocabulary.length}. Coba perbaiki kotak yang berwarna merah!`;
+            }
+        }
+
+        // Fungsi Tampilkan Solusi Otomatis
+        function showSolutions() {
+            const dropBoxes = document.querySelectorAll('.drop-box');
+            
+            dropBoxes.forEach(box => {
+                const matchId = box.dataset.match;
+                const dropArea = box.querySelector('.drop-area');
+                const correctItem = document.getElementById(`item-${matchId}`);
+                
+                // Pindahkan item ke kotak yang benar
+                dropArea.appendChild(correctItem);
+
+                // Ubah status jadi benar
+                box.classList.remove('incorrect');
+                box.classList.add('correct');
+            });
+
+            const feedback = document.getElementById('feedback');
+            feedback.style.color = "#17a2b8";
+            feedback.textContent = "Solusi otomatis telah disusun!";
+        }
+    </script>
+</body>
+</html>
